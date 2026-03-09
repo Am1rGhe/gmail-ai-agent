@@ -6,7 +6,7 @@ export function SignInButton() {
     <button
       type="button"
       onClick={() => signIn("google", { callbackUrl: "/inbox" })}
-      className="rounded-full bg-foreground px-8 py-3 text-base font-medium text-background cursor-pointer transition-colors hover:opacity-90 "
+      className="rounded-full bg-phantom-purple px-8 py-3 text-base font-medium text-white cursor-pointer transition-colors hover:bg-phantom-purple-hover"
     >
       Start With Google
     </button>

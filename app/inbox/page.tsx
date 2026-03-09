@@ -12,19 +12,19 @@ export default async function InboxPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 p-6 dark:bg-zinc-950">
+    <div className="min-h-screen bg-background p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
+          <h1 className="text-2xl font-semibold text-text">
             Inbox
           </h1>
-          <p className="mt-2 text-zinc-600 dark:text-zinc-400">
+          <p className="mt-2 text-text-muted">
             You are signed in.
           </p>
         </div>
         <Link
           href="/api/auth/signout?callbackUrl=/"
-          className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          className="rounded-lg border border-panel-border bg-panel px-4 py-2 text-sm font-medium text-text transition-colors hover:bg-phantom-purple-muted/20 hover:border-phantom-purple/30"
         >
           Sign out
         </Link>

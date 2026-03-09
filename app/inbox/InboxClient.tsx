@@ -63,7 +63,7 @@ export function InboxClient() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center text-zinc-500">
+      <div className="flex min-h-[60vh] items-center justify-center text-text-muted">
         Loading emails...
       </div>
     );
@@ -71,7 +71,7 @@ export function InboxClient() {
 
   if (error) {
     return (
-      <div className="flex h-[60vh] items-center justify-center text-zinc-500">
+      <div className="flex h-[60vh] items-center justify-center text-text-muted">
         {error}
       </div>
     );
@@ -79,11 +79,11 @@ export function InboxClient() {
 
   return (
     <div className="flex h-[calc(100vh-130px)] gap-4">
-      <div className="w-[380px] shrink-0 overflow-y-auto rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="w-[380px] shrink-0 overflow-y-auto rounded-xl border border-panel-border bg-panel">
         {emails.length === 0 ? (
-          <p className="p-4 text-zinc-500">No emails</p>
+          <p className="p-4 text-text-muted">No emails</p>
         ) : (
-          <ul className="divide-y divide-zinc-200 dark:divide-zinc-800">
+          <ul className="divide-y divide-panel-border">
             {emails.map((email) => (
               <li
                 key={email.id}
@@ -91,17 +91,17 @@ export function InboxClient() {
                 tabIndex={0}
                 onClick={() => setSelected(email)}
                 onKeyDown={(e) => e.key === "Enter" && setSelected(email)}
-                className={`cursor-pointer px-4 py-3 text-left transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800 ${
+                className={`cursor-pointer px-4 py-3 text-left transition-colors hover:bg-phantom-purple/10 hover:border-l-2 hover:border-l-phantom-purple ${
                   selected?.id === email.id
-                    ? "bg-zinc-100 dark:bg-zinc-800"
-                    : ""
+                    ? "bg-phantom-purple/10 border-l-2 border-l-phantom-purple"
+                    : "border-l-2 border-l-transparent"
                 }`}
               >
-                <p className="truncate font-medium text-zinc-900 dark:text-zinc-50">
+                <p className="truncate font-medium text-text">
                   {email.subject || "(no subject)"}
                 </p>
-                <p className="truncate text-sm text-zinc-500">{email.from}</p>
-                <p className="mt-0.5 line-clamp-2 text-sm text-zinc-600 dark:text-zinc-400">
+                <p className="truncate text-sm text-text-muted">{email.from}</p>
+                <p className="mt-0.5 line-clamp-2 text-sm text-text-muted">
                   {email.snippet}
                 </p>
               </li>
@@ -110,27 +110,27 @@ export function InboxClient() {
         )}
       </div>
 
-      <div className="min-w-0 flex-1 overflow-y-auto rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="min-w-0 flex-1 overflow-y-auto rounded-xl border border-panel-border bg-panel p-6">
         {selected ? (
           <>
-            <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">
+            <h2 className="text-xl font-semibold text-text">
               {selected.subject || "(no subject)"}
             </h2>
-            <p className="mt-1 text-sm text-zinc-500">
+            <p className="mt-1 text-sm text-text-muted">
               From: {selected.from} · {selected.date}
             </p>
-            <div className="mt-4 text-zinc-700 dark:text-zinc-300">
+            <div className="mt-4 text-text">
               {bodyLoading ? (
-                <p className="text-zinc-500">Loading...</p>
+                <p className="text-text-muted">Loading...</p>
               ) : bodyError ? (
-                <p className="text-red-500">{bodyError}</p>
+                <p className="text-red-400">{bodyError}</p>
               ) : body ? (
                 body.trim().startsWith("<") ? (
                   <iframe
                     sandbox="sandbox"
                     title="Email content"
                     srcDoc={body}
-                    className="mt-2 min-h-[400px] w-full rounded border-0 bg-white dark:bg-zinc-100"
+                    className="mt-2 min-h-[400px] w-full rounded-lg border-0 bg-white"
                     style={{ minHeight: "400px" }}
                   />
                 ) : (
@@ -139,12 +139,12 @@ export function InboxClient() {
                   </div>
                 )
               ) : (
-                <p className="text-zinc-500">{selected.snippet}</p>
+                <p className="text-text-muted">{selected.snippet}</p>
               )}
             </div>
           </>
         ) : (
-          <p className="text-zinc-500">Select an email</p>
+          <p className="text-text-muted">Select an email</p>
         )}
       </div>
     </div>
