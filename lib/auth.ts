@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 
 export const authOptions = {
   adapter: PrismaAdapter(prisma),
+  allowDangerousEmailAccountLinking: true,
+  debug: process.env.NODE_ENV === "development",
   session: {
     strategy: "database" as const,
     maxAge: 30 * 24 * 60 * 60, // 30 days
@@ -21,6 +23,8 @@ export const authOptions = {
             "https://www.googleapis.com/auth/gmail.readonly",
             "https://www.googleapis.com/auth/gmail.send",
           ].join(" "),
+          access_type: "offline",
+          prompt: "consent",
         },
       },
     }),
