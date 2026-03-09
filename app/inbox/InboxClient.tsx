@@ -21,6 +21,14 @@ export function InboxClient() {
   const [bodyLoading, setBodyLoading] = useState(false);
   const [bodyError, setBodyError] = useState<string | null>(null);
 
+  //   ai states
+  const [aiReply, setAiReply] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [tone, setTone] = useState<"professional" | "casual" | "friendly">(
+    "friendly"
+  );
+
   useEffect(() => {
     fetch("/api/gmail/emails")
       .then((res) => {
@@ -41,6 +49,8 @@ export function InboxClient() {
     if (!selected) {
       setBody(null);
       setBodyError(null);
+      setAiReply(null);
+      setAiError(null);
       return;
     }
     setBodyLoading(true);
@@ -60,6 +70,43 @@ export function InboxClient() {
       })
       .finally(() => setBodyLoading(false));
   }, [selected?.id]);
+
+  // handle replies with ai
+  async function handleReplyWithAI() {
+    // no email selected return
+    if (!selected) return;
+    setAiLoading(true);
+    setAiError(null);
+    setAiReply(null);
+    try {
+      // use full body or snippet  strip html and limit length
+      const emailBody =
+        typeof body === "string"
+          ? body
+              .replace(/<[^>]*>/g, " ")
+              .trim()
+              .slice(0, 4000) || selected.snippet
+          : selected.snippet;
+
+      const res = await fetch("/api/ai/reply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          emailSubject: selected.subject,
+          emailFrom: selected.from,
+          emailBody,
+          tone,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed to generate reply");
+      setAiReply(data.reply ?? "");
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setAiLoading(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -119,9 +166,50 @@ export function InboxClient() {
             <p className="mt-1 text-sm text-text-muted">
               From: {selected.from} · {selected.date}
             </p>
-            <button className="mt-3 rounded-lg bg-phantom-purple px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-phantom-purple-hover cursor-pointer">
-                Reply With AI
-            </button>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <select
+                value={tone}
+                onChange={(e) =>
+                  setTone(e.target.value as "professional" | "casual" | "friendly")
+                }
+                className="rounded-lg border border-panel-border bg-panel px-3 py-2 text-sm text-text focus:border-phantom-purple focus:outline-none cursor-pointer"
+              >
+                <option value="professional">Professional</option>
+                <option value="casual">Casual</option>
+                <option value="friendly">Friendly</option>
+              </select>
+              <button
+                type="button"
+                onClick={handleReplyWithAI}
+                disabled={aiLoading}
+                className="rounded-lg bg-phantom-purple px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-phantom-purple-hover disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {aiLoading ? "Generating…" : "Reply with AI"}
+              </button>
+            </div>
+            {aiError && (
+              <p className="mt-2 text-sm text-red-400">{aiError}</p>
+            )}
+            {aiReply && (
+              <div className="mt-4 rounded-lg border border-panel-border bg-panel p-4">
+                <p className="mb-2 text-sm font-medium text-text-muted">
+                  Suggested reply
+                </p>
+                <textarea
+                  readOnly
+                  value={aiReply}
+                  rows={8}
+                  className="w-full resize-none rounded-lg border border-panel-border bg-background px-3 py-2 text-sm text-text focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => navigator.clipboard.writeText(aiReply)}
+                  className="mt-2 rounded-lg border border-panel-border bg-panel px-3 py-1.5 text-sm text-text hover:bg-phantom-purple/10 hover:border-phantom-purple/30 cursor-pointer"
+                >
+                  Copy
+                </button>
+              </div>
+            )}
             <div className="mt-4 text-text">
               {bodyLoading ? (
                 <p className="text-text-muted">Loading...</p>
