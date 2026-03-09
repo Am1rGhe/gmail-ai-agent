@@ -13,8 +13,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // parse and validate request body
-    const { emailSubject, emailFrom, emailBody, tone } = await request.json();
+    const { emailSubject, emailFrom, emailBody, tone, userName } =
+      await request.json();
 
     if (!emailBody && !emailSubject) {
       return NextResponse.json(
@@ -25,35 +25,69 @@ export async function POST(request: Request) {
 
     // initialize Gemini client
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
 
     // map tone to instruction for the AI
     const toneInstruction =
       tone === "professional"
-        ? "Write in a professional, formal tone."
+        ? "Write the reply in a formal and respectful tone suitable for business communication. Use polite language and complete sentences. Avoid slang or overly casual expressions."
         : tone === "casual"
-          ? "Write in a casual, friendly tone."
-          : "Write in a warm, friendly but balanced tone.";
+          ? "Write the reply in a relaxed and conversational tone while still being respectful. Keep it short and natural, similar to how colleagues might communicate informally."
+          : "Write the reply in a warm and approachable tone while still maintaining professionalism. Be polite and positive, but slightly more relaxed than formal business language.";
 
-    // Build the prompt: original email + tone instruction
     const cleanBody =
       typeof emailBody === "string"
         ? emailBody.replace(/<[^>]*>/g, " ").trim().slice(0, 4000)
         : "";
 
-    const prompt = `You are helping to draft an email reply. Write a concise, appropriate reply to this email.
+    const prompt = `You are an AI assistant that helps users write email replies.
+
+Your task is to generate a clear and appropriate reply to the provided email.
+
+Rules:
+- Always respect proper email structure.
+- Keep the response concise, clear, and relevant to the email.
+- Maintain the requested tone (friendly, casual, or professional).
+- Do not invent information that was not mentioned in the email.
+- If the email contains questions, answer them clearly.
+- If the email requests action, acknowledge it politely.
+
+Email structure to follow:
+
+Greeting
+Short acknowledgement of the message
+Main response or answers
+Optional closing sentence
+Sign-off
+
+Example structure:
+
+Hello [Name],
+
+Thank you for your message.
+
+[Main reply here]
+
+Best regards,
+[Sender Name]
+
+${userName && typeof userName === "string" ? `The sender's name is ${userName.trim()}. Use this exact name in the sign-off instead of [Sender Name] or [Your Name].` : ""}
+
+Tone: ${tone === "professional" ? "Professional" : tone === "casual" ? "Casual" : "Friendly"}.
+
+${toneInstruction}
+
+Reply with only the email body text, no subject line.`;
+
+    const fullPrompt = `${prompt}
 
 Original email:
 From: ${emailFrom ?? "Unknown"}
 Subject: ${emailSubject ?? "(no subject)"}
 
-${cleanBody}
+${cleanBody}`;
 
-${toneInstruction}
-Reply with only the email body text, no subject line. Keep it brief (2-4 sentences unless more is needed).`;
-
-    // call Gemini and extract the generated reply
-    const result = await model.generateContent(prompt);
+    const result = await model.generateContent(fullPrompt);
     const response = result.response;
     const reply = response.text()?.trim() ?? "";
 

@@ -11,7 +11,11 @@ type EmailItem = {
   date: string;
 };
 
-export function InboxClient() {
+type InboxClientProps = {
+  userName?: string;
+};
+
+export function InboxClient({ userName }: InboxClientProps) {
   const [emails, setEmails] = useState<EmailItem[]>([]);
   const [selected, setSelected] = useState<EmailItem | null>(null);
   const [loading, setLoading] = useState(true);
@@ -28,6 +32,10 @@ export function InboxClient() {
   const [tone, setTone] = useState<"professional" | "casual" | "friendly">(
     "friendly"
   );
+
+  const [sendLoading, setSendLoading] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
+  const [sendSuccess, setSendSuccess] = useState(false);
 
   useEffect(() => {
     fetch("/api/gmail/emails")
@@ -51,6 +59,8 @@ export function InboxClient() {
       setBodyError(null);
       setAiReply(null);
       setAiError(null);
+      setSendError(null);
+      setSendSuccess(false);
       return;
     }
     setBodyLoading(true);
@@ -96,6 +106,7 @@ export function InboxClient() {
           emailFrom: selected.from,
           emailBody,
           tone,
+          userName,
         }),
       });
       const data = await res.json();
@@ -105,6 +116,40 @@ export function InboxClient() {
       setAiError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setAiLoading(false);
+    }
+  }
+
+  // send reply via gmail api
+  async function handleSendReply() {
+    if (!selected || !aiReply) return;
+    setSendLoading(true);
+    setSendError(null);
+    setSendSuccess(false);
+    try {
+      // extract email from "Name <email@x.com>" or "email@x.com"
+      const match = selected.from.match(/<([^>]+)>/);
+      const to = match ? match[1].trim() : selected.from.trim();
+      const subject = selected.subject?.startsWith("Re:")
+        ? selected.subject
+        : `Re: ${selected.subject || "(no subject)"}`;
+
+      const res = await fetch("/api/gmail/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to,
+          subject,
+          body: aiReply,
+          threadId: selected.threadId,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed to send");
+      setSendSuccess(true);
+    } catch (err) {
+      setSendError(err instanceof Error ? err.message : "Failed to send");
+    } finally {
+      setSendLoading(false);
     }
   }
 
@@ -178,6 +223,7 @@ export function InboxClient() {
                 <option value="casual">Casual</option>
                 <option value="friendly">Friendly</option>
               </select>
+              {/* reply with ai button */}
               <button
                 type="button"
                 onClick={handleReplyWithAI}
@@ -190,6 +236,7 @@ export function InboxClient() {
             {aiError && (
               <p className="mt-2 text-sm text-red-400">{aiError}</p>
             )}
+            {/* suggested reply from ai */}
             {aiReply && (
               <div className="mt-4 rounded-lg border border-panel-border bg-panel p-4">
                 <p className="mb-2 text-sm font-medium text-text-muted">
@@ -201,13 +248,30 @@ export function InboxClient() {
                   rows={8}
                   className="w-full resize-none rounded-lg border border-panel-border bg-background px-3 py-2 text-sm text-text focus:outline-none"
                 />
-                <button
-                  type="button"
-                  onClick={() => navigator.clipboard.writeText(aiReply)}
-                  className="mt-2 rounded-lg border border-panel-border bg-panel px-3 py-1.5 text-sm text-text hover:bg-phantom-purple/10 hover:border-phantom-purple/30 cursor-pointer"
-                >
-                  Copy
-                </button>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => navigator.clipboard.writeText(aiReply)}
+                    className="rounded-lg border border-panel-border bg-panel px-3 py-1.5 text-sm text-text hover:bg-phantom-purple/10 hover:border-phantom-purple/30 cursor-pointer"
+                  >
+                    Copy
+                  </button>
+                  {/* send button */}
+                  <button
+                    type="button"
+                    onClick={handleSendReply}
+                    disabled={sendLoading}
+                    className="rounded-lg bg-phantom-purple px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-phantom-purple-hover disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    {sendLoading ? "Sending…" : "Send"}
+                  </button>
+                </div>
+                {sendError && (
+                  <p className="mt-2 text-sm text-red-400">{sendError}</p>
+                )}
+                {sendSuccess && (
+                  <p className="mt-2 text-sm text-green-400">Sent</p>
+                )}
               </div>
             )}
             <div className="mt-4 text-text">

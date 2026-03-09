@@ -19,7 +19,7 @@ export default async function InboxPage() {
             Inbox
           </h1>
           <p className="mt-2 text-text-muted">
-            You are signed in.
+            Welcome back, {session.user?.name ?? "there"}.
           </p>
         </div>
         <Link
@@ -30,7 +30,7 @@ export default async function InboxPage() {
         </Link>
       </div>
       <div className="mt-6">
-        <InboxClient />
+        <InboxClient userName={session.user?.name ?? undefined} />
       </div>
     </div>
   );
