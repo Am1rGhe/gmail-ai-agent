@@ -79,7 +79,7 @@ export function InboxClient() {
 
   return (
     <div className="flex h-[calc(100vh-130px)] gap-4">
-      <div className="w-[380px] shrink-0 overflow-y-auto rounded-xl border border-panel-border bg-panel">
+      <div className="scrollbar-hide w-[380px] shrink-0 overflow-y-auto rounded-xl border border-panel-border bg-panel">
         {emails.length === 0 ? (
           <p className="p-4 text-text-muted">No emails</p>
         ) : (
@@ -119,6 +119,9 @@ export function InboxClient() {
             <p className="mt-1 text-sm text-text-muted">
               From: {selected.from} · {selected.date}
             </p>
+            <button className="mt-3 rounded-lg bg-phantom-purple px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-phantom-purple-hover cursor-pointer">
+                Reply With AI
+            </button>
             <div className="mt-4 text-text">
               {bodyLoading ? (
                 <p className="text-text-muted">Loading...</p>

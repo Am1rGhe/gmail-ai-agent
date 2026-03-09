@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
 :root {
-  --background: #000000;
+  --background: #212121;
   --foreground: #fafafa;
-  --panel: #0a0a0a;
-  --panel-border: #1a1a1a;
+  --panel: #2f2f2f;
+  --panel-border: #404040;
   --phantom-purple: #9945FF;
   --phantom-purple-hover: #7c3aed;
   --phantom-purple-muted: #6d28d9;
@@ -51,6 +51,17 @@ body {
   50% {
     background-position: 200% 50%;
   }
+}
+
+/* Hide scrollbar but keep scroll */
+.scrollbar-hide {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 @layer components {
